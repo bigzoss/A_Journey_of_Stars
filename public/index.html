@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100e1c">
+  <meta name="description" content="穿过三片梦境，用星术击退怪物，收集遗落的星芒。一个手绘风横版冒险游戏。">
+  <title>星途之旅 · Luma Trail</title>
+  <link rel="icon" href="assets/star.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="game.js"></script>
+</head>
+<body>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.8 14.9 9l7.3 3-7.3 2.9-2.9 7.3-2.9-7.3L1.8 12l7.3-3z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M6 9h.1m4 0h.1m4 0h.1m4 0h.1M6 13h.1m4 0h.1m4 0h.1m4 0h.1M9 16h6"/></symbol>
+    <symbol id="i-audio" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6m2-9a8 8 0 0 1 0 12"/></symbol>
+    <symbol id="i-muted" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm13 1 4 4m0-4-4 4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3m-3 4v2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14m6-14v14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20 4.6 13C.2 8.7 5.7 2.8 10 6.6l2 1.8 2-1.8c4.3-3.8 9.8 2.1 5.4 6.4z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m14 2-2 7h7l-9 13 2-8H5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 24 24"><path d="M3 8h8M2 12h12m-9 4h6m4-10 6 6-6 6"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12m0-12H8a2.5 2.5 0 1 1 2.5-2.5zM12 8h4a2.5 2.5 0 1 0-2.5-2.5z"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5m-1-8h12m-4-4 4 4-4 4"/></symbol>
+  </svg>
+  <div class="shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="星途之旅首页">
+        <span class="brand-mark"><svg><use href="#i-star"/></svg></span>
+        <span><strong>LUMA TRAIL</strong><small>星途之旅</small></span>
+      </a>
+      <div class="tools">
+        <button class="quiet reward-button" id="open-reward" type="button" aria-label="查看奶茶兑换卡" title="查看奶茶兑换卡" hidden><svg aria-hidden="true"><use href="#i-gift"/></svg><span>兑换卡</span></button>
+        <button class="quiet" id="help" type="button" aria-label="操作指南"><svg><use href="#i-keyboard"/></svg><span>操作指南</span></button>
+        <button class="quiet audio" id="audio" type="button" aria-label="游戏声音" title="切换背景音乐和音效" aria-pressed="true"><svg><use href="#i-audio"/></svg></button>
+        <form action="/logout" method="post"><button class="quiet" type="submit" aria-label="退出登录" title="退出登录"><svg aria-hidden="true"><use href="#i-logout"/></svg></button></form>
+      </div>
+    </header>
+
+    <main>
+      <section class="stage" id="stage" aria-label="游戏舞台">
+        <div class="cover" id="cover">
+          <div class="cover-copy">
+            <div class="kicker"><span></span><span id="hero-chapter">CHAPTER 01</span><span class="kicker-dot"></span><span id="hero-name">月影森林</span></div>
+            <h1>Luma <em>Trail</em></h1>
+            <div class="hero-subtitle">星途之旅</div>
+            <p id="hero-description">跟随月光穿过森林，拾起遗落的星芒。<br>当三颗星亮起，梦境的门就会打开。</p>
+            <button class="primary" id="start" type="button" disabled><svg><use href="#i-play"/></svg><span>开启旅程</span><svg class="cta-arrow"><use href="#i-arrow"/></svg></button>
+            <div class="start-hint" id="start-hint">正在加载关卡…</div>
+          </div>
+          <div class="cover-index"><span></span><b id="cover-number">01</b><i></i>03</div>
+        </div>
+        <div class="playfield" id="playfield" hidden>
+          <canvas id="world" aria-label="星途旅人的横版冒险游戏画面"></canvas>
+          <div class="hud">
+            <div class="hud-left">
+              <div class="hud-level"><small id="chapter-number"></small><strong id="chapter-name"></strong></div>
+              <div class="hud-health" id="hud-health" role="group" aria-label="生命 3 / 3">
+                <svg><use href="#i-heart"/></svg><svg><use href="#i-heart"/></svg><svg><use href="#i-heart"/></svg>
+              </div>
+            </div>
+            <div class="hud-stars" id="hud-stars" role="group" aria-label="已收集 0 颗星">
+              <svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg>
+            </div>
+            <div class="hud-right"><span class="timer"><svg><use href="#i-clock"/></svg><span id="timer">00:00</span></span><button id="pause" class="quiet" type="button" aria-label="暂停"><svg><use href="#i-pause"/></svg></button></div>
+          </div>
+          <div id="boss-hud" class="boss-hud" hidden>
+            <span>曙光守卫</span>
+            <span id="boss-status" class="boss-status"></span>
+            <div id="boss-health" class="boss-health" role="meter" aria-label="曙光守卫生命" aria-valuemin="0"><i></i></div>
+          </div>
+          <p id="toast" class="toast" role="status"></p>
+          <div class="overlay" id="overlay" hidden>
+            <div class="overlay-panel" role="group" aria-labelledby="overlay-title">
+              <div class="overlay-mark"><svg><use href="#i-star"/></svg></div>
+              <div class="eyebrow" id="overlay-label"></div>
+              <h2 id="overlay-title"></h2>
+              <p id="overlay-text"></p>
+              <button class="primary" id="overlay-action" type="button"></button>
+              <div class="overlay-links">
+                <button id="restart" class="text-button" type="button">重玩本关</button>
+                <button id="back" class="text-button" type="button">返回章节</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="game-controls" id="touch-controls" hidden aria-label="游戏操作">
+        <div class="movement">
+          <button data-key="left" class="quiet" aria-label="向左" type="button"><svg><use href="#i-left"/></svg></button>
+          <button data-key="right" class="quiet" aria-label="向右" type="button"><svg><use href="#i-right"/></svg></button>
+        </div>
+        <div class="control-note"><strong>星术</strong><span id="guard-status">击败守门者，解除封印</span></div>
+        <div class="skill-buttons">
+          <button data-key="jump" class="quiet jump" aria-label="跳跃" type="button"><svg><use href="#i-up"/></svg><span>跳跃</span></button>
+          <button data-key="attack" class="quiet skill attack" type="button" aria-label="星弹，J" title="J · 发射星弹"><svg><use href="#i-bolt"/></svg><span>星弹</span><kbd>J</kbd></button>
+          <button data-key="dash" class="quiet skill dash" type="button" aria-label="月影冲刺，K" title="K · 冲刺并躲过怪物和飞弹"><svg><use href="#i-dash"/></svg><span>冲刺</span><kbd>K</kbd></button>
+        </div>
+      </div>
+
+      <section class="chapters" aria-labelledby="chapters-title">
+        <div class="section-heading">
+          <div><div class="eyebrow"><svg><use href="#i-star"/></svg> THE JOURNEY</div><h2 id="chapters-title">旅程章节</h2></div>
+          <div class="progress">
+            <span id="progress-label">已通关 0 / 3</span>
+            <div class="progress-track" aria-hidden="true"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="chapter-grid" id="chapter-grid">
+          <button type="button" class="chapter moon" data-level="0" aria-pressed="true" disabled>
+            <span class="chapter-no">01</span><span class="chapter-text"><small>MOONLIT WOODS</small><strong>月影森林</strong></span>
+            <span class="chapter-status"><svg><use href="#i-play"/></svg></span>
+          </button>
+          <button type="button" class="chapter cavern" data-level="1" aria-pressed="false" disabled>
+            <span class="chapter-no">02</span><span class="chapter-text"><small>GLOWING CAVERN</small><strong>萤光洞窟</strong></span>
+            <span class="chapter-status"><svg><use href="#i-lock"/></svg></span>
+          </button>
+          <button type="button" class="chapter dawn" data-level="2" aria-pressed="false" disabled>
+            <span class="chapter-no">03</span><span class="chapter-text"><small>ISLES OF DAWN</small><strong>破晓浮岛</strong></span>
+            <span class="chapter-status"><svg><use href="#i-lock"/></svg></span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span><svg><use href="#i-star"/></svg> LUMA TRAIL <i></i> 星途之旅</span>
+      <span class="keys"><kbd>←</kbd><kbd>→</kbd> 移动 <kbd>Space</kbd> 跳跃 <kbd>J</kbd> 星弹 <kbd>K</kbd> 冲刺</span>
+    </footer>
+  </div>
+  <dialog id="guide" aria-labelledby="guide-title">
+    <button id="close-guide" class="quiet close" type="button" aria-label="关闭操作指南"><svg><use href="#i-close"/></svg></button>
+    <div class="eyebrow"><svg><use href="#i-star"/></svg> FIELD GUIDE</div>
+    <h2 id="guide-title">操作指南</h2>
+    <p>集齐三颗星芒并击败守门者，即可开启传送门。击败怪物会回复一颗心。复活时会回到起点或已点亮的篝火，保留星芒和本关战斗进度。</p>
+    <dl>
+      <div><dt>向左 / 向右</dt><dd><kbd>←</kbd> <kbd>→</kbd> 或 <kbd>A</kbd> <kbd>D</kbd></dd></div>
+      <div><dt>跳跃</dt><dd><kbd>Space</kbd> <kbd>↑</kbd> 或 <kbd>W</kbd></dd></div>
+      <div><dt>星弹（可按住连发）</dt><dd><kbd>J</kbd></dd></div>
+      <div><dt>月影冲刺（穿过怪物和飞弹）</dt><dd><kbd>K</kbd></dd></div>
+      <div><dt>暂停 / 继续</dt><dd><kbd>Esc</kbd></dd></div>
+      <div><dt>重玩本关</dt><dd><kbd>R</kbd></dd></div>
+    </dl>
+    <p class="guide-note">曙光守卫会追击玩家，并在发射飞弹后跃起换位。看到粉色瞄准线时躲开飞弹，看到金色预警线时跳过冲锋，或用月影冲刺穿过守卫。触屏设备可用舞台下方的按钮。</p>
+    <details class="progress-reset">
+      <summary>清除游戏记录</summary>
+      <p>清除当前浏览器的通关进度和最佳用时，回到第一关。本机的兑换提交文件会保留。</p>
+      <p id="reset-progress-error" role="alert" hidden>浏览器未能清除游戏记录，请重试。</p>
+      <button class="quiet" id="reset-progress" type="button">确认清除</button>
+    </details>
+  </dialog>
+  <dialog id="reward" class="reward-dialog" aria-labelledby="reward-title">
+    <button id="close-reward" class="quiet close" type="button" aria-label="关闭兑换卡"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+    <div class="eyebrow"><svg aria-hidden="true"><use href="#i-gift"/></svg> JOURNEY REWARD</div>
+    <h2 id="reward-title" tabindex="-1">恭喜通关！</h2>
+    <div id="reward-achievement" class="reward-achievement">
+      <span class="achievement-mark"><svg aria-hidden="true"><use href="#i-star"/></svg></span>
+      <div>
+        <strong>达成「星途旅人」成就</strong>
+        <p>你已击败曙光守卫。来领取一杯奶茶，庆祝通关吧！</p>
+      </div>
+    </div>
+    <p id="reward-intro">任选一个品牌，填写饮品和兑换信息，即可生成兑换卡。</p>
+    <form id="reward-form" class="reward-form" method="dialog" autocomplete="off">
+      <fieldset>
+        <legend><span>01</span> 选择品牌 <small>三选一</small></legend>
+        <div class="reward-brands">
+          <label class="brand-option coffee">
+            <input type="radio" name="brand" value="coffee" required>
+            <img class="brand-option-logo" src="assets/logo-starbucks.svg" alt="">
+            <span><strong>星巴克</strong><small>STARBUCKS</small></span>
+          </label>
+          <label class="brand-option jasmine">
+            <input type="radio" name="brand" value="jasmine" required>
+            <img class="brand-option-logo" src="assets/logo-chagee.png" alt="">
+            <span><strong>霸王茶姬</strong><small>CHAGEE</small></span>
+          </label>
+          <label class="brand-option pearl">
+            <input type="radio" name="brand" value="pearl" required>
+            <img class="brand-option-logo" src="assets/logo-kawangka.png" alt="">
+            <span><strong>卡旺卡</strong><small>COME WONKA</small></span>
+          </label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span>02</span> 饮品规格 <small>加料选填</small></legend>
+        <div class="reward-fields">
+          <label class="field-wide">饮品名称<input name="drink" type="text" maxlength="32" placeholder="填写你想喝的饮品" required></label>
+          <label>杯型 / 容量<input name="size" type="text" maxlength="14" placeholder="例如 大杯 / 500 mL" required></label>
+          <label>冰量 / 温度<select name="temperature" required>
+            <option value="">请选择</option><option>默认冰量</option><option>正常冰</option><option>少冰</option><option>去冰</option><option>常温</option><option>热饮</option>
+          </select></label>
+          <label>甜度<select name="sugar" required>
+            <option value="">请选择</option><option>默认甜度</option><option>全糖</option><option>七分糖</option><option>半糖</option><option>三分糖</option><option>无糖</option>
+          </select></label>
+          <label>加料 / 备注<input name="extras" type="text" maxlength="28" placeholder="例如 加珍珠"></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span>03</span> 兑换信息 <small>均为必填</small></legend>
+        <div class="reward-fields">
+          <label>联系电话<input name="phone" type="tel" inputmode="tel" maxlength="24" placeholder="填写可联系的号码" required></label>
+          <label>兑换日期时间<input name="appointment" type="datetime-local" min="2000-01-01T00:00" max="2099-12-31T23:59" required></label>
+          <label class="field-wide">兑换地址<textarea name="address" rows="2" maxlength="90" placeholder="填写门店地址或约定的收货地址" required></textarea></label>
+        </div>
+      </fieldset>
+      <p class="reward-note">生成兑换卡时，填写的信息会保存到运行游戏的电脑，供赠卡人核查。下载的卡片包含完整地址和电话。</p>
+      <p id="reward-error" class="form-error" role="alert" hidden></p>
+      <div class="reward-actions">
+        <button class="primary" type="submit"><svg aria-hidden="true"><use href="#i-gift"/></svg><span>生成兑换卡</span></button>
+      </div>
+    </form>
+    <div id="reward-preview" hidden>
+      <svg id="reward-ticket" class="reward-ticket" xmlns="http://www.w3.org/2000/svg" width="800" height="620" viewBox="0 0 800 620" fill="none" stroke="none" role="img" aria-labelledby="ticket-title" aria-describedby="ticket-description">
+        <title id="ticket-title">星途之旅 · 一杯奶茶兑换卡</title>
+        <desc id="ticket-description"></desc>
+        <defs>
+          <linearGradient id="ticket-base" x2="1" y2="1"><stop id="ticket-dark"/><stop id="ticket-light" offset="1"/></linearGradient>
+          <clipPath id="ticket-photo-clip"><rect x="531" y="36" width="229" height="262" rx="16"/></clipPath>
+        </defs>
+        <rect width="800" height="620" rx="24" fill="url(#ticket-base)"/>
+        <rect x="12" y="12" width="776" height="596" rx="17" stroke="#fff2df" stroke-opacity=".38" stroke-width="1.4"/>
+        <circle cx="403" cy="56" r="122" fill="#fff2df" opacity=".035"/>
+        <image id="ticket-photo" x="531" y="36" width="229" height="262" preserveAspectRatio="xMidYMid slice" clip-path="url(#ticket-photo-clip)"/>
+        <rect x="531" y="36" width="229" height="262" rx="16" stroke="#fff1dc" stroke-opacity=".52"/>
+        <rect x="546" y="267" width="80" height="21" rx="10.5" fill="#1b1421" fill-opacity=".76"/>
+        <path d="M39 318H761M39 554H761" stroke="#fff1dd" stroke-opacity=".35" stroke-dasharray="5 6"/>
+        <g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif" fill="#fff5e8">
+          <g id="ticket-accent" fill="#ffdfb5">
+            <path d="m49 44 3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+            <text x="72" y="61" font-size="16" font-weight="700" letter-spacing="2.8">LUMA TRAIL · FINISHER REWARD</text>
+            <text x="42" y="215" font-size="17" letter-spacing="2">饮品名称</text>
+            <text x="42" y="350" font-size="17" letter-spacing="2">饮品规格</text>
+            <text x="482" y="350" font-size="17" letter-spacing="2">兑换日期时间</text>
+            <text x="482" y="411" font-size="17" letter-spacing="2">联系电话</text>
+            <text x="42" y="459" font-size="17" letter-spacing="2">兑换地址</text>
+          </g>
+          <text x="38" y="129" font-size="55" font-weight="700" letter-spacing="3">一杯奶茶兑换卡</text>
+          <rect x="41" y="148" width="222" height="44" rx="13" fill="#fff1df" fill-opacity=".13" stroke="#fff1df" stroke-opacity=".52"/>
+          <rect x="47" y="153" width="76" height="34" rx="8" fill="#fff8ee"/>
+          <image id="ticket-logo" x="52" y="155" width="66" height="30" preserveAspectRatio="xMidYMid meet"/>
+          <text id="ticket-brand" x="134" y="178" font-size="22" font-weight="700"></text>
+          <text x="586" y="281.5" font-size="11" text-anchor="middle">饮品示意</text>
+          <text id="ticket-drink" x="42" y="253" font-size="27" font-weight="700"></text>
+          <text id="ticket-specs" x="42" y="379" font-size="22"></text>
+          <text id="ticket-appointment" x="482" y="379" font-size="22"></text>
+          <text id="ticket-phone" x="482" y="440" font-size="22"></text>
+          <text id="ticket-address" x="42" y="487" font-size="22"></text>
+          <text id="reward-code" x="42" y="585" font-size="15" font-family="Consolas, monospace"></text>
+          <text id="reward-date" x="241" y="585" font-size="15"></text>
+          <text x="758" y="585" font-size="15" text-anchor="end">凭卡向赠卡人兑换一杯饮品</text>
+        </g>
+      </svg>
+      <dl class="reward-mobile-details" aria-hidden="true">
+        <div><dt>饮品</dt><dd data-preview="drink"></dd></div>
+        <div><dt>规格</dt><dd data-preview="specs"></dd></div>
+        <div><dt>兑换时间</dt><dd data-preview="appointment"></dd></div>
+        <div><dt>联系电话</dt><dd data-preview="phone"></dd></div>
+        <div><dt>兑换地址</dt><dd data-preview="address"></dd></div>
+      </dl>
+      <p class="reward-note">卡片包含填写的地址和电话。饮品图片为示意，实际饮品以卡面填写为准。</p>
+      <p id="reward-download-error" class="form-error" role="alert" hidden></p>
+      <div class="reward-actions">
+        <button class="quiet" id="edit-reward" type="button">返回修改</button>
+        <div>
+          <button class="quiet" id="download-reward-svg" type="button">保存 SVG</button>
+          <button class="primary" id="download-reward" type="button"><svg aria-hidden="true"><use href="#i-gift"/></svg><span>保存图片</span></button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
