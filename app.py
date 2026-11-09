@@ -6,11 +6,12 @@ import hmac
 import json
 import re
 import secrets
+import sqlite3
 import time
 import webbrowser
+from contextlib import closing
 from datetime import date, datetime, timedelta, timezone
 from functools import partial
-from getpass import getpass
 from http.cookies import CookieError, SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
@@ -23,6 +24,7 @@ from urllib.parse import parse_qs, urlsplit
 PUBLIC = Path(__file__).resolve().parent / "public"
 REDEMPTIONS = PUBLIC.parent / "兑换记录"
 LOGIN_CONFIG = PUBLIC.parent / "login.local.json"
+ACCOUNTS_DB = PUBLIC.parent / "accounts.local.sqlite3"
 SESSION_COOKIE = "luma_session"
 SESSION_DURATION = 12 * 60 * 60
 CHINA_TIME = timezone(timedelta(hours=8))
@@ -43,22 +45,16 @@ def load_login():
     try:
         config = json.loads(LOGIN_CONFIG.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        username = input("Create a game username: ").strip()
-        password = getpass("Create a game password: ")
-        if not username or not password:
-            raise ValueError("The game username and password are required.")
-        config = {
-            "username": username,
-            "password_sha256": hashlib.sha256(password.encode("utf-8")).hexdigest(),
-        }
-        with LOGIN_CONFIG.open("x", encoding="utf-8") as file:
-            json.dump(config, file, ensure_ascii=False, indent=2)
-            file.write("\n")
-    username = config["username"].encode("utf-8")
+        return None, None
+    username = config["username"]
     digest = bytes.fromhex(config["password_sha256"])
     if not username or len(digest) != hashlib.sha256().digest_size:
         raise ValueError("Invalid login configuration.")
     return username, digest
+
+
+def password_hash(password, salt):
+    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600_000)
 
 
 def redemption_record(data):
@@ -168,9 +164,12 @@ class GameHandler(SimpleHTTPRequestHandler):
             return ""
         return cookie[SESSION_COOKIE].value if SESSION_COOKIE in cookie else ""
 
-    def authenticated(self):
+    def session_account(self):
         with self.session_lock:
-            return self.sessions.get(self.session_token(), 0) > time.monotonic()
+            session = self.sessions.get(self.session_token())
+        if session and session[0] > time.monotonic():
+            return session[1]
+        return None
 
     def redirect(self, target, cookie=None):
         self.send_response(303)
@@ -193,20 +192,44 @@ class GameHandler(SimpleHTTPRequestHandler):
         url = urlsplit(self.path)
         target = Path(self.translate_path(self.path)).resolve()
         if target == PUBLIC or target == PUBLIC / "index.html":
-            if not self.authenticated():
+            account = self.session_account()
+            if account is None:
                 self.redirect("/login")
                 return None
-            return self.send_bytes((PUBLIC / "index.html").read_bytes(), "text/html; charset=utf-8")
-        if url.path == "/login" or target == PUBLIC / "login.html":
-            if self.authenticated():
+            body = (PUBLIC / "index.html").read_bytes()
+            if account != self.login_name:
+                account_key = hashlib.sha256(account.encode("utf-8")).hexdigest().encode("ascii")
+                body = body.replace(b'<meta name="luma-account" content="">',
+                                    b'<meta name="luma-account" content="' + account_key + b'">')
+            return self.send_bytes(body, "text/html; charset=utf-8")
+        if url.path in ("/login", "/register") or target == PUBLIC / "login.html":
+            if self.session_account() is not None:
                 self.redirect("/")
                 return None
             body = (PUBLIC / "login.html").read_bytes()
-            if url.query == "error=1":
+            if url.path == "/register":
+                body = body.replace("<title>登录 · 星途之旅</title>".encode("utf-8"),
+                                    "<title>注册账号 · 星途之旅</title>".encode("utf-8"))
+                body = body.replace(b"data-login-panel>", b"data-login-panel hidden>")
+                body = body.replace(b"data-register-panel hidden", b"data-register-panel")
+                messages = {
+                    "error=invalid": "请填写 2 至 64 个字符的用户名和 8 至 64 个字符的密码。",
+                    "error=mismatch": "两次输入的密码不一致，请重新填写。",
+                    "error=taken": "这个用户名已被使用，请换一个。",
+                    "error=unavailable": "暂时无法保存账号，请稍后再试。",
+                }
+                message = messages.get(url.query)
+                if message:
+                    body = body.replace(b'data-register-error hidden></p>',
+                                        b'data-register-error tabindex="-1" autofocus>' +
+                                        message.encode("utf-8") + b"</p>")
+            elif url.query == "error=1":
                 body = body.replace(b"data-login-error hidden", b'data-login-error tabindex="-1" autofocus')
+            elif url.query == "registered=1":
+                body = body.replace(b"data-register-success hidden", b"data-register-success")
             return self.send_bytes(body, "text/html; charset=utf-8")
         if url.path == "/api/levels":
-            if not self.authenticated():
+            if self.session_account() is None:
                 return self.send_bytes(b'{"error":"login_required"}', "application/json", 401)
             body = json.dumps(LEVELS, ensure_ascii=False).encode("utf-8")
             return self.send_bytes(body, "application/json; charset=utf-8")
@@ -222,7 +245,7 @@ class GameHandler(SimpleHTTPRequestHandler):
                 self.sessions.pop(self.session_token(), None)
             self.redirect("/login", f"{SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0")
             return
-        if route != "/login":
+        if route not in ("/login", "/register"):
             self.send_error(404)
             return
         try:
@@ -230,13 +253,18 @@ class GameHandler(SimpleHTTPRequestHandler):
             if not 0 < length <= 4096 or self.headers.get_content_type() != "application/x-www-form-urlencoded":
                 raise ValueError("Invalid login form")
             form = parse_qs(self.rfile.read(length).decode("utf-8"), max_num_fields=4, errors="strict")
-        except (ValueError, UnicodeError):
-            self.redirect("/login?error=1")
+        except ValueError:
+            self.redirect("/register?error=invalid" if route == "/register" else "/login?error=1")
             return
 
-        name = form.get("username", [""])[0].encode("utf-8")
-        digest = hashlib.sha256(form.get("password", [""])[0].encode("utf-8")).digest()
-        if not (hmac.compare_digest(name, self.login_name) and hmac.compare_digest(digest, self.password_digest)):
+        name = form.get("username", [""])[0]
+        password = form.get("password", [""])[0]
+        if route == "/register":
+            self.register_account(name.strip(), password, form.get("confirmation", [""])[0])
+            return
+        if name != self.login_name:
+            name = name.strip()
+        if not self.check_login(name, password):
             self.redirect("/login?error=1")
             return
 
@@ -244,13 +272,49 @@ class GameHandler(SimpleHTTPRequestHandler):
         now = time.monotonic()
         with self.session_lock:
             self.sessions.pop(self.session_token(), None)
-            for expired in [key for key, expiry in self.sessions.items() if expiry <= now]:
+            for expired in [key for key, (expiry, _) in self.sessions.items() if expiry <= now]:
                 del self.sessions[expired]
-            self.sessions[token] = now + SESSION_DURATION
+            self.sessions[token] = (now + SESSION_DURATION, name)
         self.redirect("/", f"{SESSION_COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age={SESSION_DURATION}")
 
+    def register_account(self, name, password, confirmation):
+        if self.session_account() is not None:
+            self.redirect("/")
+            return
+        if not (2 <= len(name) <= 64 and name.isprintable() and 8 <= len(password) <= 64):
+            self.redirect("/register?error=invalid")
+            return
+        if password != confirmation:
+            self.redirect("/register?error=mismatch")
+            return
+        if name == self.login_name:
+            self.redirect("/register?error=taken")
+            return
+        salt = secrets.token_bytes(16)
+        digest = password_hash(password, salt)
+        try:
+            with closing(sqlite3.connect(ACCOUNTS_DB)) as db, db:
+                db.execute("INSERT INTO accounts VALUES (?, ?, ?)", (name, salt, digest))
+        except sqlite3.IntegrityError:
+            self.redirect("/register?error=taken")
+            return
+        except sqlite3.OperationalError:
+            self.redirect("/register?error=unavailable")
+            return
+        self.redirect("/login?registered=1")
+
+    def check_login(self, name, password):
+        if name == self.login_name:
+            digest = hashlib.sha256(password.encode("utf-8")).digest()
+            return hmac.compare_digest(digest, self.password_digest)
+        if not (2 <= len(name) <= 64 and 8 <= len(password) <= 64):
+            return False
+        with closing(sqlite3.connect(ACCOUNTS_DB)) as db:
+            row = db.execute("SELECT salt, digest FROM accounts WHERE username = ?", (name,)).fetchone()
+        return row is not None and hmac.compare_digest(password_hash(password, row[0]), row[1])
+
     def submit_redemption(self):
-        if not self.authenticated():
+        if self.session_account() is None:
             self.send_error(401)
             return
         try:
@@ -278,6 +342,8 @@ def main():
     parser.add_argument("--open", action="store_true", help="Open the game in the default browser")
     args = parser.parse_args()
     GameHandler.login_name, GameHandler.password_digest = load_login()
+    with closing(sqlite3.connect(ACCOUNTS_DB)) as db:
+        db.execute("CREATE TABLE IF NOT EXISTS accounts (username TEXT PRIMARY KEY, salt BLOB NOT NULL, digest BLOB NOT NULL)")
     handler = partial(GameHandler, directory=str(PUBLIC))
 
     with ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:

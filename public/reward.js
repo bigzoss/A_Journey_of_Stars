@@ -1,4 +1,6 @@
-const saveKey = "luma-trail.reward.v1";
+import { accountKey } from "./storage.js";
+
+const saveKey = accountKey("luma-trail.reward.v1");
 const brands = {
   coffee: { name: "星巴克", logo: "logo-starbucks.svg", dark: "#112e27", light: "#2c5747", accent: "#c3edcf" },
   jasmine: { name: "霸王茶姬", logo: "logo-chagee.png", dark: "#371b29", light: "#744052", accent: "#ffd8b7" },

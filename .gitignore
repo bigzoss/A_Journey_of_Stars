@@ -1,3 +1,4 @@
 /兑换记录/
 /login.local.json
+/accounts.local.sqlite3*
 __pycache__/

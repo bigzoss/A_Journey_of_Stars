@@ -129,6 +129,10 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
 }
 .login-form button { margin-top: 8px; justify-content: space-between; }
 .login-form .form-error { margin: 0 0 4px; padding: 9px 10px; border: 1px solid #b16387; border-radius: 7px; color: #ffd6e4; background: #45253f; font-size: 13px; line-height: 1.5; }
+.login-form .form-success { margin: 0 0 4px; padding: 9px 10px; border: 1px solid #568a78; border-radius: 7px; color: #c5f5dd; background: #233e38; font-size: 13px; line-height: 1.5; }
+.login-form .form-hint { margin: -8px 0 4px; color: var(--muted); font-size: 12px; }
+.login-panel > .login-switch { margin: 14px 0 0; }
+.login-switch a { display: inline-flex; align-items: center; min-height: 44px; color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
 .login-footer { margin-top: 25px; }
 .stage {
   --scene: var(--moon);

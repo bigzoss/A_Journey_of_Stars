@@ -2,6 +2,7 @@ import { createRun, STEP, step } from "./physics.js";
 import { createScene } from "./scene.js";
 import { ATTACK_COOLDOWN, DASH_COOLDOWN, gateIsReady, MAX_HEALTH } from "./combat.js";
 import { enableReward, showReward } from "./reward.js";
+import { accountKey } from "./storage.js";
 
 const $ = id => document.getElementById(id);
 const cards = [...document.querySelectorAll("[data-level]")];
@@ -38,8 +39,8 @@ const tones = {
   checkpoint: [392, 523, 659],
   bossVolley: [242, 362, 302], bossCharge: [148, 108],
 };
-const saveKey = "luma-trail.combat.v1";
-const originalSaveKey = "luma-trail.progress.v1";
+const saveKey = accountKey("luma-trail.combat.v1");
+const originalSaveKey = accountKey("luma-trail.progress.v1");
 const held = new Set();
 const pointers = new Map();
 const taps = new Set();
