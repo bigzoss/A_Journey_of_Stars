@@ -121,6 +121,7 @@ function fillTicket(details, photo, logo) {
   document.getElementById("ticket-brand").textContent = brand.name;
   wrapText("ticket-drink", details.drink, 457, 31);
   wrapText("ticket-specs", specs, 415, 24);
+  wrapText("ticket-name", details.name, 710, 24);
   wrapText("ticket-phone", details.phone, 271, 20);
   wrapText("ticket-address", details.address, 710, 24);
   document.getElementById("ticket-appointment").textContent = appointment;
@@ -129,7 +130,7 @@ function fillTicket(details, photo, logo) {
   const summary = { ...details, drink: `${brand.name} · ${details.drink}`, specs, appointment };
   for (const item of preview.querySelectorAll("[data-preview]")) item.textContent = summary[item.dataset.preview];
   document.getElementById("ticket-description").textContent =
-    `${brand.name} ${details.drink}，${specs}。兑换时间 ${appointment}，联系电话 ${details.phone}，地址 ${details.address}。`;
+    `${brand.name} ${details.drink}，${specs}。兑换时间 ${appointment}，姓名 ${details.name}，联系电话 ${details.phone}，地址 ${details.address}。`;
 }
 
 form.addEventListener("input", event => {
@@ -140,7 +141,7 @@ form.addEventListener("submit", async event => {
   event.preventDefault();
   if (!card || submit.disabled) return;
   const details = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, value.trim().replace(/\s+/g, " ")]));
-  for (const name of ["drink", "size", "address"]) {
+  for (const name of ["drink", "size", "name", "address"]) {
     if (!details[name]) form.elements[name].setCustomValidity("请填写此项。");
   }
   if (!/^[+\d ().-]+$/.test(details.phone) || !/^\d{7,18}$/.test(details.phone.replace(/\D/g, ""))) {

@@ -35,6 +35,7 @@ REDEMPTION_FIELDS = {
     "temperature": ("冰量或温度", 8),
     "sugar": ("甜度", 8),
     "extras": ("加料或备注", 28),
+    "name": ("姓名", 32),
     "phone": ("联系电话", 24),
     "appointment": ("兑换日期时间", 16),
     "address": ("兑换地址", 90),

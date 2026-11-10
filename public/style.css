@@ -564,7 +564,7 @@ dialog .guide-note { font-size: 12px; margin-bottom: 0; }
   .brand-option-logo { width: 48px; height: 23px; }
   .brand-option small { font-size: 8px; }
   .reward-fields { gap: 8px; }
-  .reward-fields label:has([name="appointment"]) { grid-column: 1 / -1; }
+  .reward-fields label:has([name="name"]) { grid-column: 1 / -1; }
   .reward-fields label:has([name="phone"]) { grid-column: 1 / -1; }
   #reward-preview .reward-actions > div { justify-content: flex-start; }
   .reward-dialog .reward-mobile-details {
